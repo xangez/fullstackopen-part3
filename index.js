@@ -1,7 +1,9 @@
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
+const cors = require("cors");
 
+app.use(cors());
 app.use(express.json());
 
 morgan.token("body", (req, res) => {
@@ -46,9 +48,9 @@ app.get("/info", (request, response) => {
   response.send(display);
 });
 
-// app.get("/api/persons", (request, response) => {
-//   response.json(persons);
-// });
+app.get("/api/persons", (request, response) => {
+  response.json(persons);
+});
 
 app.get("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
@@ -68,7 +70,7 @@ app.delete("/api/persons/:id", (request, response) => {
 });
 
 const generateId = () => {
-  return Math.random() * (10000 - 5) + 5;
+  return Math.floor(Math.random() * (10000 - 5) + 5);
 };
 
 const checkUnique = (name) => {
@@ -96,7 +98,7 @@ app.post("/api/persons", (request, response) => {
   response.send(person);
 });
 
-const PORT = 3001;
+const PORT = procress.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
