@@ -16,16 +16,15 @@ morgan.token("body", (req, res) => {
 
 app.use(morgan(":method :url :status :res[content-length] :body - :response-time ms"));
 
-// app.get("/", (request, response) => {
-//   response.send("<h1>Hello World</h1>");
-// });
-
-// app.get("/info", (request, response) => {
-//   const numberOfPeople = persons.length;
-//   const currentTime = new Date();
-//   const display = `<p>Phonebook has info for ${numberOfPeople} people</p><p>${currentTime}`;
-//   response.send(display);
-// });
+app.get("/info", (request, response) => {
+  Person.countDocuments()
+    .then((number) => {
+      const currentTime = new Date();
+      const display = `<p>Phonebook has info for ${number} people</p><p>${currentTime}`;
+      response.send(display);
+    })
+    .catch((error) => next(error));
+});
 
 app.get("/api/people", (request, response) => {
   Person.find({}).then((people) => {
@@ -38,8 +37,6 @@ app.get("/api/people/:id", (request, response, next) => {
     .then((person) => {
       if (person) {
         response.json(person);
-        const display = `<p>${person.name}</p><p>${person.number}</p>`;
-        response.send(display);
       } else {
         response.status(404).end();
       }
@@ -47,7 +44,7 @@ app.get("/api/people/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response, next) => {
+app.delete("/api/people/:id", (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then((result) => {
       response.status(204).end();
@@ -55,24 +52,27 @@ app.delete("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-const checkUnique = (name) => {
-  let unique;
-  Person.find({}).then((people) => {
-    unique = people.find((person) => person.name === name);
-  });
-  return unique;
-};
+app.put("/api/people/:id", (request, response, next) => {
+  const body = request.body;
 
-app.post("/api/people", (request, response) => {
+  const person = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Person.findByIdAndUpdate(request.params.id, person, {new: true})
+    .then((updatedPerson) => {
+      response.json(updatedPerson);
+    })
+    .catch((error) => next(error));
+});
+
+app.post("/api/people", (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: "content missing",
-    });
-  } else if (checkUnique(body.name)) {
-    return response.status(400).json({
-      error: "name must be unique",
     });
   }
 
@@ -86,6 +86,22 @@ app.post("/api/people", (request, response) => {
   });
   response.send(person);
 });
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({error: "unknown endpoint"});
+};
+
+app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+  if (error.name === "CastError") {
+    return response.status(400).send({error: "malformatted id"});
+  }
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
