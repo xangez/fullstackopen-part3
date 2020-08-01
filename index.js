@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const Person = require("./models/person");
 
 const cors = require("cors");
+const {replaceOne} = require("./models/person");
 
 app.use(express.static("build"));
 app.use(cors());
@@ -81,10 +82,13 @@ app.post("/api/people", (request, response, next) => {
     number: body.number,
   });
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
-  });
-  response.send(person);
+  person
+    .save()
+    .then((savedPerson) => savedPerson.toJSON())
+    .then((savedAndFormattedPerson) => {
+      response.json(savedAndFormattedPerson);
+    })
+    .catch((error) => next(error));
 });
 
 const unknownEndpoint = (request, response) => {
@@ -97,6 +101,8 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message);
   if (error.name === "CastError") {
     return response.status(400).send({error: "malformatted id"});
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({error: error.message});
   }
   next(error);
 };
