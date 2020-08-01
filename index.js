@@ -5,7 +5,6 @@ const morgan = require("morgan");
 const Person = require("./models/person");
 
 const cors = require("cors");
-const {replaceOne} = require("./models/person");
 
 app.use(express.static("build"));
 app.use(cors());
