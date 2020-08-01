@@ -1,12 +1,19 @@
 const mongoose = require("mongoose");
-mongoose.set("useFindAndModify", false);
+const uniqueValidator = require("mongoose-unique-validator");
 
 const url = process.env.MONGODB_URI;
 
 console.log("connecting to", url);
 
+const dbOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: true,
+  useCreateIndex: true,
+};
+
 mongoose
-  .connect(url, {useNewUrlParser: true, useUnifiedTopology: true})
+  .connect(url, dbOptions)
   .then((result) => {
     console.log("connected to MongoDB");
   })
@@ -17,13 +24,17 @@ mongoose
 const personSchema = new mongoose.Schema({
   name: {
     type: String,
+    minlength: 3,
     required: true,
   },
   number: {
     type: String,
+    minlength: 8,
     required: true,
   },
 });
+
+personSchema.plugin(uniqueValidator);
 
 personSchema.set("toJSON", {
   transform: (document, returnedObject) => {
