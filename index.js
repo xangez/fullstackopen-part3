@@ -10,13 +10,13 @@ app.use(express.static("build"));
 app.use(cors());
 app.use(express.json());
 
-morgan.token("body", (req, res) => {
+morgan.token("body", (req) => {
   JSON.stringify(req.body);
 });
 
 app.use(morgan(":method :url :status :res[content-length] :body - :response-time ms"));
 
-app.get("/info", (request, response) => {
+app.get("/info", (request, response, next) => {
   Person.countDocuments()
     .then((number) => {
       const currentTime = new Date();
@@ -46,7 +46,7 @@ app.get("/api/people/:id", (request, response, next) => {
 
 app.delete("/api/people/:id", (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end();
     })
     .catch((error) => next(error));

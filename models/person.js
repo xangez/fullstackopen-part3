@@ -14,7 +14,7 @@ const dbOptions = {
 
 mongoose
   .connect(url, dbOptions)
-  .then((result) => {
+  .then(() => {
     console.log("connected to MongoDB");
   })
   .catch((error) => {
